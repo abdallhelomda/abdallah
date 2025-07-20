@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="utf-8"/>
+<title>رؤية - نظام الإدارة المالية</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+    * { box-sizing: border-box; }
+    body {
+        background-color: #111;
+        color: gold;
+        font-family: Arial, sans-serif;
+        padding: 20px;
+    }
+    h1 { text-align: center; }
+    .section-btn {
+        font-size: 22px;
+        padding: 18px 0;
+        width: 100%;
+        border-radius: 12px;
+        margin: 15px auto;
+        background-color: gold;
+        color: #111;
+        border: none;
+        display: block;
+        cursor: pointer;
+    }
+    .form-section {
+        display: none;
+        background-color: #222;
+        margin-top: 10px;
+        padding: 15px;
+        border-radius: 10px;
+    }
+    input, button {
+        width: 100%;
+        padding: 14px;
+        margin: 5px 0;
+        border-radius: 6px;
+        border: none;
+        font-size: 20px;
+    }
+    .label {
+        margin-top: 10px;
+        display: block;
+        color: #ffc;
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+        color: gold;
+    }
+    th, td {
+        border: 1px solid #444;
+        padding: 10px;
+        text-align: center;
+    }
+    th {
+        background-color: #333;
+    }
+    td {
+        background-color: #222;
+    }
+    button.delete-btn {
+        background: none;
+        border: none;
+        color: red;
+        font-size: 20px;
+        cursor: pointer;
+    }
+</style>
+</head>
+<body>
+<h1>
+  <img src="rooo.png" alt="شعار رؤية" style="width: 160px; max-width: 80%; display: block; margin: 20px auto;">
+</h1>
+
+<!-- قسم الدخل -->
+<button class="section-btn" onclick="toggleSection('income')">💰 قسم الدخل</button>
+<div class="form-section" id="income">
+    <label class="label">الوصف</label><input id="in_desc" type="text"/>
+    <label class="label">المبلغ</label><input id="in_amount" type="number"/>
+    <button onclick="saveIncome()">💾 حفظ</button>
+    <div id="incomeList"></div>
+</div>
+
+<!-- قسم المصروفات -->
+<button class="section-btn" onclick="toggleSection('expenses')">📤 قسم المصروفات</button>
+<div class="form-section" id="expenses">
+    <label class="label">الوصف</label><input id="ex_desc" type="text"/>
+    <label class="label">المبلغ</label><input id="ex_amount" type="number"/>
+    <button onclick="saveExpense()">💾 حفظ</button>
+    <div id="expensesList"></div>
+</div>
+
+<!-- قسم التقارير -->
+<button class="section-btn" onclick="toggleSection('reports')">📊 تقارير الأرباح</button>
+<div class="form-section" id="reports">
+    <div id="reportContent"></div>
+</div>
+
+<script>
+    const toggleSection = id => {
+        const section = document.getElementById(id);
+        const isOpen = section.style.display === 'block';
+
+        // اقفل الكل
+        document.querySelectorAll('.form-section').forEach(sec => sec.style.display = 'none');
+
+        // لو مش مفتوح، افتحه
+        if (!isOpen) {
+            section.style.display = 'block';
+            if (id === 'reports') showReport();
+        }
+    }
+
+    let income = JSON.parse(localStorage.getItem("income") || "[]");
+    let expenses = JSON.parse(localStorage.getItem("expenses") || "[]");
+
+    const saveIncome = () => {
+        let entry = {
+            desc: in_desc.value,
+            amount: parseFloat(in_amount.value),
+            date: new Date().toLocaleDateString('ar-EG')
+        };
+        income.push(entry);
+        localStorage.setItem("income", JSON.stringify(income));
+        showIncome();
+    }
+
+    const saveExpense = () => {
+        let entry = {
+            desc: ex_desc.value,
+            amount: parseFloat(ex_amount.value),
+            date: new Date().toLocaleDateString('ar-EG')
+        };
+        expenses.push(entry);
+        localStorage.setItem("expenses", JSON.stringify(expenses));
+        showExpenses();
+    }
+
+    const showIncome = () => {
+        if (income.length === 0) return incomeList.innerHTML = "<p>لا يوجد دخل مسجل.</p>";
+        incomeList.innerHTML = `
+        <table><thead><tr><th>الوصف</th><th>المبلغ</th><th>التاريخ</th><th>حذف</th></tr></thead><tbody>
+        ${income.map((e, i) => `
+            <tr><td>${e.desc}</td><td>${e.amount}</td><td>${e.date}</td>
+            <td><button class="delete-btn" onclick="deleteIncome(${i})">❌</button></td></tr>
+        `).join("")}</tbody></table>`;
+    }
+
+    const deleteIncome = i => {
+        if (confirm("هل تريد حذف هذا الدخل؟")) {
+            income.splice(i, 1);
+            localStorage.setItem("income", JSON.stringify(income));
+            showIncome();
+        }
+    }
+
+    const showExpenses = () => {
+        if (expenses.length === 0) return expensesList.innerHTML = "<p>لا يوجد مصروفات.</p>";
+        expensesList.innerHTML = `
+        <table><thead><tr><th>الوصف</th><th>المبلغ</th><th>التاريخ</th><th>حذف</th></tr></thead><tbody>
+        ${expenses.map((e, i) => `
+            <tr><td>${e.desc}</td><td>${e.amount}</td><td>${e.date}</td>
+            <td><button class="delete-btn" onclick="deleteExpense(${i})">❌</button></td></tr>
+        `).join("")}</tbody></table>`;
+    }
+
+    const deleteExpense = i => {
+        if (confirm("هل تريد حذف هذه المصروف؟")) {
+            expenses.splice(i, 1);
+            localStorage.setItem("expenses", JSON.stringify(expenses));
+            showExpenses();
+        }
+    }
+
+    const showReport = () => {
+        let totalIncome = income.reduce((sum, e) => sum + e.amount, 0);
+        let totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+        let profit = totalIncome - totalExpenses;
+        reportContent.innerHTML = `
+            <h2>📊 ملخص الأرباح</h2>
+            <p>إجمالي الدخل: <strong>${totalIncome} جنيه</strong></p>
+            <p>إجمالي المصروفات: <strong>${totalExpenses} جنيه</strong></p>
+            <p>صافي الربح: <strong>${profit} جنيه</strong></p>
+        `;
+    }
+
+    // عرض البيانات عند الفتح
+    showIncome();
+    showExpenses();
+</script>
+</body>
+</html>
