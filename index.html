@@ -103,7 +103,7 @@
     <div id="foreignFundsList"></div>
 </div>
 
-<!-- قسم التقارير -->
+<!-- قسم تقارير الأرباح -->
 <button class="section-btn" onclick="toggleSection('reports')">📊 تقارير الأرباح</button>
 <div class="form-section" id="reports">
     <div id="reportContent"></div>
@@ -115,6 +115,12 @@
     <div id="foreignReportContent"></div>
 </div>
 
+<!-- قسم إجمالي المصروفات -->
+<button class="section-btn" onclick="toggleSection('totalExpenses')">📦 إجمالي المصروفات</button>
+<div class="form-section" id="totalExpenses">
+    <div id="totalExpensesContent"></div>
+</div>
+
 <script>
     const toggleSection = id => {
         const section = document.getElementById(id);
@@ -124,6 +130,7 @@
             section.style.display = 'block';
             if (id === 'reports') showReport();
             if (id === 'foreignReports') showForeignReport();
+            if (id === 'totalExpenses') showTotalExpenses();
         }
     }
 
@@ -238,10 +245,19 @@
         `;
     }
 
+    const showTotalExpenses = () => {
+        let total = expenses.reduce((sum, e) => sum + e.amount, 0);
+        totalExpensesContent.innerHTML = `
+            <h2>📦 إجمالي المصروفات</h2>
+            <p>إجمالي المصروفات: <strong>${total} جنيه</strong></p>
+        `;
+    }
+
     // عرض البيانات عند الفتح
     showIncome();
     showExpenses();
     showForeignFunds();
+    showTotalExpenses();
 </script>
 </body>
 </html>
