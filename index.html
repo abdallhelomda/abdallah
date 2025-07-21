@@ -76,7 +76,7 @@
   <img src="rooo.png" alt="شعار رؤية" style="width: 160px; max-width: 80%; display: block; margin: 20px auto;">
 </h1>
 
-<!-- قسم الدخل -->
+<!-- كل الأقسام -->
 <button class="section-btn" onclick="toggleSection('income')">💰 قسم الدخل</button>
 <div class="form-section" id="income">
     <label class="label">الوصف</label><input id="in_desc" type="text"/>
@@ -85,7 +85,6 @@
     <div id="incomeList"></div>
 </div>
 
-<!-- قسم المصروفات -->
 <button class="section-btn" onclick="toggleSection('expenses')">📤 قسم المصروفات</button>
 <div class="form-section" id="expenses">
     <label class="label">الوصف</label><input id="ex_desc" type="text"/>
@@ -94,7 +93,6 @@
     <div id="expensesList"></div>
 </div>
 
-<!-- قسم الأموال بالخارج -->
 <button class="section-btn" onclick="toggleSection('foreignFunds')">💸 قسم الأموال بالخارج</button>
 <div class="form-section" id="foreignFunds">
     <label class="label">الوصف</label><input id="ff_desc" type="text"/>
@@ -103,22 +101,34 @@
     <div id="foreignFundsList"></div>
 </div>
 
-<!-- قسم تقارير الأرباح -->
 <button class="section-btn" onclick="toggleSection('reports')">📊 تقارير الأرباح</button>
 <div class="form-section" id="reports">
     <div id="reportContent"></div>
 </div>
 
-<!-- قسم تقارير الأموال بالخارج -->
 <button class="section-btn" onclick="toggleSection('foreignReports')">🌍 تقارير الأموال بالخارج</button>
 <div class="form-section" id="foreignReports">
     <div id="foreignReportContent"></div>
 </div>
 
-<!-- قسم إجمالي المصروفات -->
 <button class="section-btn" onclick="toggleSection('totalExpenses')">📦 إجمالي المصروفات</button>
 <div class="form-section" id="totalExpenses">
     <div id="totalExpensesContent"></div>
+</div>
+
+<!-- 🆕 قسم الأموال عليه -->
+<button class="section-btn" onclick="toggleSection('moneyOwed')">💳 قسم الأموال عليه</button>
+<div class="form-section" id="moneyOwed">
+    <label class="label">الوصف</label><input id="mo_desc" type="text"/>
+    <label class="label">المبلغ</label><input id="mo_amount" type="number"/>
+    <button onclick="saveMoneyOwed()">💾 حفظ</button>
+    <div id="moneyOwedList"></div>
+</div>
+
+<!-- 🆕 تقرير الأموال عليه -->
+<button class="section-btn" onclick="toggleSection('moneyOwedReport')">📍 تقارير الأموال عليه</button>
+<div class="form-section" id="moneyOwedReport">
+    <div id="moneyOwedReportContent"></div>
 </div>
 
 <script>
@@ -131,12 +141,15 @@
             if (id === 'reports') showReport();
             if (id === 'foreignReports') showForeignReport();
             if (id === 'totalExpenses') showTotalExpenses();
+            if (id === 'moneyOwed') showMoneyOwed();
+            if (id === 'moneyOwedReport') showMoneyOwedReport();
         }
     }
 
     let income = JSON.parse(localStorage.getItem("income") || "[]");
     let expenses = JSON.parse(localStorage.getItem("expenses") || "[]");
     let foreignFunds = JSON.parse(localStorage.getItem("foreignFunds") || "[]");
+    let moneyOwed = JSON.parse(localStorage.getItem("moneyOwed") || "[]");
 
     const saveIncome = () => {
         let entry = {
@@ -171,6 +184,18 @@
         showForeignFunds();
     }
 
+    const saveMoneyOwed = () => {
+        let entry = {
+            desc: mo_desc.value,
+            amount: parseFloat(mo_amount.value),
+            date: new Date().toLocaleDateString('ar-EG')
+        };
+        moneyOwed.push(entry);
+        localStorage.setItem("moneyOwed", JSON.stringify(moneyOwed));
+        showMoneyOwed();
+        showMoneyOwedReport();
+    }
+
     const showIncome = () => {
         if (income.length === 0) return incomeList.innerHTML = "<p>لا يوجد دخل مسجل.</p>";
         incomeList.innerHTML = `
@@ -199,6 +224,25 @@
             <tr><td>${e.desc}</td><td>${e.amount}</td><td>${e.date}</td>
             <td><button class="delete-btn" onclick="deleteForeignFund(${i})">❌</button></td></tr>
         `).join("")}</tbody></table>`;
+    }
+
+    const showMoneyOwed = () => {
+        if (moneyOwed.length === 0) return moneyOwedList.innerHTML = "<p>لا يوجد أموال عليك.</p>";
+        moneyOwedList.innerHTML = `
+        <table><thead><tr><th>الوصف</th><th>المبلغ</th><th>التاريخ</th><th>تم السداد</th></tr></thead><tbody>
+        ${moneyOwed.map((e, i) => `
+            <tr><td>${e.desc}</td><td>${e.amount}</td><td>${e.date}</td>
+            <td><button class="delete-btn" onclick="payMoneyOwed(${i})">✅</button></td></tr>
+        `).join("")}</tbody></table>`;
+    }
+
+    const payMoneyOwed = i => {
+        if (confirm("هل تم سداد هذا المبلغ؟")) {
+            moneyOwed.splice(i, 1);
+            localStorage.setItem("moneyOwed", JSON.stringify(moneyOwed));
+            showMoneyOwed();
+            showMoneyOwedReport();
+        }
     }
 
     const deleteIncome = i => {
@@ -253,11 +297,21 @@
         `;
     }
 
+    const showMoneyOwedReport = () => {
+        let total = moneyOwed.reduce((sum, e) => sum + e.amount, 0);
+        moneyOwedReportContent.innerHTML = `
+            <h2>📍 ملخص الأموال عليه</h2>
+            <p>إجمالي المبالغ المستحقة عليك: <strong>${total} جنيه</strong></p>
+        `;
+    }
+
     // عرض البيانات عند الفتح
     showIncome();
     showExpenses();
     showForeignFunds();
     showTotalExpenses();
+    showMoneyOwed();
+    showMoneyOwedReport();
 </script>
 </body>
 </html>
