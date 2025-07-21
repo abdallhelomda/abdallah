@@ -94,29 +94,42 @@
     <div id="expensesList"></div>
 </div>
 
+<!-- قسم الأموال بالخارج -->
+<button class="section-btn" onclick="toggleSection('foreignFunds')">💸 قسم الأموال بالخارج</button>
+<div class="form-section" id="foreignFunds">
+    <label class="label">الوصف</label><input id="ff_desc" type="text"/>
+    <label class="label">المبلغ</label><input id="ff_amount" type="number"/>
+    <button onclick="saveForeignFund()">💾 حفظ</button>
+    <div id="foreignFundsList"></div>
+</div>
+
 <!-- قسم التقارير -->
 <button class="section-btn" onclick="toggleSection('reports')">📊 تقارير الأرباح</button>
 <div class="form-section" id="reports">
     <div id="reportContent"></div>
 </div>
 
+<!-- قسم تقارير الأموال بالخارج -->
+<button class="section-btn" onclick="toggleSection('foreignReports')">🌍 تقارير الأموال بالخارج</button>
+<div class="form-section" id="foreignReports">
+    <div id="foreignReportContent"></div>
+</div>
+
 <script>
     const toggleSection = id => {
         const section = document.getElementById(id);
         const isOpen = section.style.display === 'block';
-
-        // اقفل الكل
         document.querySelectorAll('.form-section').forEach(sec => sec.style.display = 'none');
-
-        // لو مش مفتوح، افتحه
         if (!isOpen) {
             section.style.display = 'block';
             if (id === 'reports') showReport();
+            if (id === 'foreignReports') showForeignReport();
         }
     }
 
     let income = JSON.parse(localStorage.getItem("income") || "[]");
     let expenses = JSON.parse(localStorage.getItem("expenses") || "[]");
+    let foreignFunds = JSON.parse(localStorage.getItem("foreignFunds") || "[]");
 
     const saveIncome = () => {
         let entry = {
@@ -140,6 +153,17 @@
         showExpenses();
     }
 
+    const saveForeignFund = () => {
+        let entry = {
+            desc: ff_desc.value,
+            amount: parseFloat(ff_amount.value),
+            date: new Date().toLocaleDateString('ar-EG')
+        };
+        foreignFunds.push(entry);
+        localStorage.setItem("foreignFunds", JSON.stringify(foreignFunds));
+        showForeignFunds();
+    }
+
     const showIncome = () => {
         if (income.length === 0) return incomeList.innerHTML = "<p>لا يوجد دخل مسجل.</p>";
         incomeList.innerHTML = `
@@ -148,14 +172,6 @@
             <tr><td>${e.desc}</td><td>${e.amount}</td><td>${e.date}</td>
             <td><button class="delete-btn" onclick="deleteIncome(${i})">❌</button></td></tr>
         `).join("")}</tbody></table>`;
-    }
-
-    const deleteIncome = i => {
-        if (confirm("هل تريد حذف هذا الدخل؟")) {
-            income.splice(i, 1);
-            localStorage.setItem("income", JSON.stringify(income));
-            showIncome();
-        }
     }
 
     const showExpenses = () => {
@@ -168,11 +184,37 @@
         `).join("")}</tbody></table>`;
     }
 
+    const showForeignFunds = () => {
+        if (foreignFunds.length === 0) return foreignFundsList.innerHTML = "<p>لا يوجد أموال بالخارج.</p>";
+        foreignFundsList.innerHTML = `
+        <table><thead><tr><th>الوصف</th><th>المبلغ</th><th>التاريخ</th><th>حذف</th></tr></thead><tbody>
+        ${foreignFunds.map((e, i) => `
+            <tr><td>${e.desc}</td><td>${e.amount}</td><td>${e.date}</td>
+            <td><button class="delete-btn" onclick="deleteForeignFund(${i})">❌</button></td></tr>
+        `).join("")}</tbody></table>`;
+    }
+
+    const deleteIncome = i => {
+        if (confirm("هل تريد حذف هذا الدخل؟")) {
+            income.splice(i, 1);
+            localStorage.setItem("income", JSON.stringify(income));
+            showIncome();
+        }
+    }
+
     const deleteExpense = i => {
         if (confirm("هل تريد حذف هذه المصروف؟")) {
             expenses.splice(i, 1);
             localStorage.setItem("expenses", JSON.stringify(expenses));
             showExpenses();
+        }
+    }
+
+    const deleteForeignFund = i => {
+        if (confirm("هل تريد حذف هذا السجل؟")) {
+            foreignFunds.splice(i, 1);
+            localStorage.setItem("foreignFunds", JSON.stringify(foreignFunds));
+            showForeignFunds();
         }
     }
 
@@ -188,9 +230,18 @@
         `;
     }
 
+    const showForeignReport = () => {
+        let total = foreignFunds.reduce((sum, e) => sum + e.amount, 0);
+        foreignReportContent.innerHTML = `
+            <h2>🌍 ملخص الأموال بالخارج</h2>
+            <p>إجمالي الأموال بالخارج: <strong>${total} جنيه</strong></p>
+        `;
+    }
+
     // عرض البيانات عند الفتح
     showIncome();
     showExpenses();
+    showForeignFunds();
 </script>
 </body>
 </html>
